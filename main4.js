@@ -1,9 +1,9 @@
 const RXN_TIME = 200;
-const CENTER_X = 512;
-const CENTER_Y = 384;
-const STATUS_TOP = 527;
+const CENTER_X = 1920/2;
+const CENTER_Y = 1080/2;
+const STATUS_TOP = 665;
 const STATUS_L1_TOP = STATUS_TOP + 30;
-const MARGIN = 50;
+const MARGIN = 450;
 const LINEHEIGHT = 35;
 const GAMEOVER = Number.MAX_SAFE_INTEGER;
 
@@ -16,6 +16,28 @@ class MainScene extends Phaser.Scene {
 
     preload () {
         this.load.image("hate-lg", "assets/hate-lg.png")
+    
+        this.load.image("splash", "assets/SSJ2019_logolarge.png");
+
+        this.load.image('bg', 'assets/stupidPrizesBG-HD.png');
+        this.load.image('p1', 'assets/influencer1.png');
+        this.load.image('p2', 'assets/influencer2.png');
+
+        this.load.bitmapFont('type-y', 'assets/font/typewriter-yellow.png', 'assets/font/typewriter-yellow.fnt');
+       
+        this.load.image('hearto', 'assets/heart-orange.png');
+        this.load.image('heartb', 'assets/heart-blue.png');
+        this.load.image('shareo', 'assets/sharicle-orange.png');
+        this.load.image('shareb', 'assets/sharicle-blue.png');
+
+        this.load.image('alert', 'assets/alert.png');
+        this.load.image("follower-lg", "assets/icons/follower-lg.png");
+
+        this.load.image("hate", "assets/icons/hate.png");
+
+        this.load.text("tagList", "assets/names.txt");
+        this.load.text("nameList", "assets/nameList.txt");
+        this.load.text("firstNames", "assets/nameListA.txt");
     }
 
     create () {
@@ -322,11 +344,11 @@ class MainScene extends Phaser.Scene {
     click(player,scene) {
         player.count += 1;
         if (player == scene.p1) {
-            scene.emitter1.explode(Math.floor(Math.random()*3)+1, scene.p1.LEFT + 5,STATUS_TOP)
-            scene.emitter1b.explode(Math.floor(Math.random()*3)+1,scene.p1.LEFT + 5,STATUS_TOP)
+            scene.emitter1.explode(Math.floor(Math.random()*5)+1)
+            scene.emitter1b.explode(Math.floor(Math.random()*5)+1)
         } else {
-            scene.emitter2.explode(Math.floor(Math.random()*3)+1,scene.p2.LEFT + 5,STATUS_TOP)
-            scene.emitter2b.explode(Math.floor(Math.random()*3)+1,scene.p2.LEFT + 5,STATUS_TOP)
+            scene.emitter2.explode(Math.floor(Math.random()*5)+1)
+            scene.emitter2b.explode(Math.floor(Math.random()*5)+1)
         }
     }
 
@@ -335,11 +357,11 @@ class MainScene extends Phaser.Scene {
             this.p1.alert.visible = true;
             this.p1.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
             this.p1.alertText.visible = true;
-            this.p1alerter.start();
+         //   this.p1alerter.start();
         } else {
             this.p1.alert.visible = false;
             this.p1.alertText.visible = false;
-            this.p1alerter.stop();
+        //    this.p1alerter.stop();
 
         }
         if (this.p2.count >= this.p2.nextAt) {
@@ -347,58 +369,60 @@ class MainScene extends Phaser.Scene {
             this.p2.alertText.visible = true;
             this.p2.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
 
-            this.p2alerter.start();
+        //    this.p2alerter.start();
 
         } else {
             this.p2.alert.visible = false;
             this.p2.alertText.visible = false;
-            this.p2alerter.stop();
+        //    this.p2alerter.stop();
 
         }
     }
 
     createParticles(){
         let scene = this;
-        var particles = this.add.particles('heart');
-        var part2 = this.add.particles('share');
-
         var e1config = {
-            speed: 100,
-            scale: { start: .2, end: 1 },
-            on: false,
-            tint: 0xff7930,
-            lifespan: 550
+            speed: [150, 250],
+            scale: { start: .2, end: 3},
+            emitting: false,
+            lifespan: [500, 2000]
         }
-
+        
         var e2config = {
-            speed: 100,
-            scale: { start: .2, end: 1 },
-            on: false,
-            tint: 0x4184fb,
-            lifespan: 550
+            speed: [150, 250],
+            scale: { start: .2, end: 3},
+            emitting: false,
+            lifespan: [500,2000]
         }
+        
+        this.emitter1 = this.add.particles(scene.p1.LEFT, STATUS_TOP, 'hearto', e1config)
+        this.emitter1b = this.add.particles(scene.p1.LEFT, STATUS_TOP, 'shareo', e1config)
+        this.emitter2 = this.add.particles(scene.p2.LEFT, STATUS_TOP, 'heartb', e2config)
+        this.emitter2b = this.add.particles(scene.p2.LEFT, STATUS_TOP, 'shareb', e2config)
 
-        this.emitter2 = particles.createEmitter(e2config);
 
-        this.emitter1 = particles.createEmitter(e1config);
-        this.emitter1b = part2.createEmitter(e1config);
-        this.emitter2b = part2.createEmitter(e2config);
 
-        var alerticles = this.add.particles('alert');
-        this.p1alerter = alerticles.createEmitter({
-            deathZone: {
-                type: 'onEnter',
-                source: new Phaser.Geom.Rectangle(scene.p1.alert.x-40,scene.p1.alert.y-12,100,100)
-            },
-            speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
-        this.p1alerter.startFollow(this.p1.alert,0,-13);
-        this.p1alerter.stop();
-        this.p2alerter = alerticles.createEmitter({deathZone: {
-            type: 'onEnter',
-            source: new Phaser.Geom.Rectangle(scene.p2.alert.x-40,scene.p2.alert.y-12,100,100)
-        },speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
-        this.p2alerter.startFollow(this.p2.alert,0,-13);
-        this.p2alerter.stop();
+        // this.emitter2 = particles.createEmitter(e2config);
+
+        //this.emitter1 = particles.createEmitter(e1config);
+        // this.emitter1b = part2.createEmitter(e1config);
+        // this.emitter2b = part2.createEmitter(e2config);
+
+        // var alerticles = this.add.particles('alert');
+        // this.p1alerter = alerticles.createEmitter({
+        //     deathZone: {
+        //         type: 'onEnter',
+        //         source: new Phaser.Geom.Rectangle(scene.p1.alert.x-40,scene.p1.alert.y-12,100,100)
+        //     },
+        //     speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
+        // this.p1alerter.startFollow(this.p1.alert,0,-13);
+        // this.p1alerter.stop();
+        // this.p2alerter = alerticles.createEmitter({deathZone: {
+        //     type: 'onEnter',
+        //     source: new Phaser.Geom.Rectangle(scene.p2.alert.x-40,scene.p2.alert.y-12,100,100)
+        // },speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
+        // this.p2alerter.startFollow(this.p2.alert,0,-13);
+        // this.p2alerter.stop();
     }
 
     createUpgrades() {
@@ -524,19 +548,7 @@ class MainScene extends Phaser.Scene {
     
 }
 
-let config = {
-    type: Phaser.CANVAS,
-    width: 1024,
-    height: 768,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
-        }
-    },
-    scene: [Splash]
-};
+
 
 class Title extends Phaser.Scene {
     constructor() {
@@ -581,7 +593,22 @@ class Instructions extends Phaser.Scene {
     }
 }
 
+let config = {
+    type: Phaser.CANVAS,
+    width: 1920,
+    height: 1080,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
+        }
+    },
+    scene: [Title]
+};
+
 let game = new Phaser.Game(config);
 game.scene.add("Main", MainScene, false);
-game.scene.add("Title", Title, false);
+//game.scene.add("Title", Title, false);
 game.scene.add("Instructions", Instructions, false);
+game.scene.start("Title");
