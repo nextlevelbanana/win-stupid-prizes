@@ -1,10 +1,15 @@
 const RXN_TIME = 200;
+const WIDTH = 1920;
 const CENTER_X = 1920/2;
 const CENTER_Y = 1080/2;
-const STATUS_TOP = 665;
+const STATUS_TOP = 1080/3*2;
 const STATUS_L1_TOP = STATUS_TOP + 30;
+const L_MARGIN = 120;
+const P1_X = L_MARGIN + 30;
 const MARGIN = 450;
-const LINEHEIGHT = 35;
+const LINEHEIGHT = 50;
+const BIGFONTSIZE = 48;
+const SMALLFONTSIZE = 36;
 const GAMEOVER = Number.MAX_SAFE_INTEGER;
 
 class MainScene extends Phaser.Scene {
@@ -12,6 +17,8 @@ class MainScene extends Phaser.Scene {
         super("Main");
         this.p1;
         this.p2;
+        this.p1Sprite;
+        this.p2Sprite;
     }
 
     preload () {
@@ -27,10 +34,19 @@ class MainScene extends Phaser.Scene {
        
         this.load.image('hearto', 'assets/heart-orange.png');
         this.load.image('heartb', 'assets/heart-blue.png');
-        this.load.image('shareo', 'assets/sharicle-orange.png');
-        this.load.image('shareb', 'assets/sharicle-blue.png');
+        this.load.image('reposto', 'assets/sharicle-orange.png');
+        this.load.image('repostb', 'assets/sharicle-blue.png');
+        this.load.image('nodeo', 'assets/node-orange.png');
+        this.load.image('nodeb', 'assets/node-blue.png');
+        this.load.image('shareo', 'assets/share-arrow-orange.png');
+        this.load.image('shareb', 'assets/share-arrow-blue.png');
+        this.load.image('planeo', 'assets/plane-orange.png');
+        this.load.image('planeb', 'assets/plane-blue.png');
 
         this.load.image('alert', 'assets/alert.png');
+        this.load.image('p1menu', 'assets/orange-menu.png');
+        this.load.image('p2menu', 'assets/blue-menu.png');
+
         this.load.image("follower-lg", "assets/icons/follower-lg.png");
 
         this.load.image("hate", "assets/icons/hate.png");
@@ -39,30 +55,36 @@ class MainScene extends Phaser.Scene {
         this.load.text("nameList", "assets/nameList.txt");
         this.load.text("firstNames", "assets/nameListA.txt");
     }
-
+    
     create () {
         let scene = this; 
         this.input.enabled = false;
         this.add.image(CENTER_X, CENTER_Y, 'bg');
-        this.add.image(MARGIN + 5, STATUS_TOP, 'p1');
-        this.add.image(CENTER_X+(MARGIN) + 5, STATUS_TOP, 'p2');
+        this.p1Sprite = this.add.image(L_MARGIN, STATUS_TOP , 'p1');
+        this.p2Sprite = this.add.image(WIDTH - L_MARGIN, STATUS_TOP, 'p2');
         this.createUpgrades();
         this.createCharacters();
         this.registry.set("cooldown",0);
+        
+        const p1StatusX = L_MARGIN;
+        const p2StatusX = CENTER_X + L_MARGIN;
+        
+        const statusY = STATUS_L1_TOP + (LINEHEIGHT*2);
+        const statusY2 = STATUS_L1_TOP + (LINEHEIGHT*3.5);
 
-        this.add.bitmapText(this.p1.LEFT, STATUS_L1_TOP + (LINEHEIGHT/2), 'type-y', this.p1.name, 32);
-        this.add.bitmapText(this.p2.LEFT, STATUS_L1_TOP + (LINEHEIGHT/2), 'type-y', this.p2.name, 32);
-        this.add.image(this.p1.LEFT + 10,STATUS_L1_TOP + (LINEHEIGHT*1.8), 'follower-lg');
-        this.add.image(this.p2.LEFT + 10,STATUS_L1_TOP + (LINEHEIGHT*1.8), 'follower-lg');
+        this.add.bitmapText(p1StatusX, statusY, 'type-y', this.p1.name, BIGFONTSIZE);
+        this.add.bitmapText(p2StatusX, statusY, 'type-y', this.p2.name, BIGFONTSIZE);
+        this.add.image(p1StatusX + 20, statusY2, 'follower-lg');
+        this.add.image(p2StatusX + 20, statusY2, 'follower-lg');
 
-        scene.name1 = this.add.bitmapText(this.p1.LEFT, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', 32);
-        scene.name2 = this.add.bitmapText(this.p2.LEFT, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', 32);
+        scene.name1 = this.add.bitmapText(p1StatusX, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', BIGFONTSIZE);
+        scene.name2 = this.add.bitmapText(p2StatusX, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', BIGFONTSIZE);
 
-        this.p1.scoreText = this.add.bitmapText(this.p1.LEFT + LINEHEIGHT, STATUS_L1_TOP + (LINEHEIGHT*1.5), 'type-y', this.formatFollowerString(this.p1), this.getFontSize(this.p1.count));
-        this.p2.scoreText = this.add.bitmapText(this.p2.LEFT + LINEHEIGHT, STATUS_L1_TOP + (LINEHEIGHT*1.5), 'type-y', this.formatFollowerString(this.p2), this.getFontSize(this.p2.count));
+        this.p1.scoreText = this.add.bitmapText(p1StatusX + 50, statusY2 - 15, 'type-y', this.formatFollowerString(this.p1), this.getFontSize(this.p1.count));
+        this.p2.scoreText = this.add.bitmapText(p2StatusX + 50, statusY2 - 15, 'type-y', this.formatFollowerString(this.p2), this.getFontSize(this.p2.count));
 
-        this.p1.rateText = this.add.bitmapText(this.p1.LEFT, STATUS_L1_TOP + (LINEHEIGHT * 4), 'type-y', this.formatRateString(this.p1), 32);
-        this.p2.rateText = this.add.bitmapText(this.p2.LEFT, STATUS_L1_TOP + (LINEHEIGHT * 4), 'type-y', this.formatRateString(this.p2), 32);
+        this.p1.rateText = this.add.bitmapText(p1StatusX, statusY2 + LINEHEIGHT, 'type-y', this.formatRateString(this.p1), BIGFONTSIZE);
+        this.p2.rateText = this.add.bitmapText(p2StatusX, statusY2 + LINEHEIGHT, 'type-y', this.formatRateString(this.p2), BIGFONTSIZE);
     
         this.time.delayedCall(300, () => {this.input.enabled = true;},null,this);
 
@@ -330,57 +352,77 @@ class MainScene extends Phaser.Scene {
         this.p1.timesHated= 0;
         this.p2.timesHated = 0;
 
-        this.p1.alert = this.add.sprite(CENTER_X - 100,STATUS_L1_TOP,"alert")
-        this.p2.alert = this.add.sprite(1024 - 100,STATUS_L1_TOP,"alert")
-        this.p1.alertText = this.add.bitmapText(CENTER_X - 150, STATUS_L1_TOP + LINEHEIGHT, "type-y", "Buy Influence!", 16)
+       // this.p1.alert = this.add.sprite(CENTER_X - 100,STATUS_L1_TOP + LINEHEIGHT,"alert")
+        //this.p2.alert = this.add.sprite(1024 - 100,STATUS_L1_TOP,"alert")
+        this.p1.alertText = this.add.bitmapText(CENTER_X - 400, 980, "type-y", "Buy Influence!", SMALLFONTSIZE);
+        this.p1.menuIcon = this.add.sprite(CENTER_X - 276, 880, "p1menu");
+        this.p1.menuIcon.visible = false;
         this.p1.alertText.visible = false;
-        this.p2.alertText = this.add.bitmapText(1024 - 150, STATUS_L1_TOP + LINEHEIGHT, "type-y", "Buy Influence!", 16)
+        this.p2.alertText = this.add.bitmapText(WIDTH - 400, 980, "type-y", "Buy Influence!", SMALLFONTSIZE);
+        this.p2.menuIcon = this.add.sprite(WIDTH - 276, 880, "p2menu");
+        this.p2.menuIcon.visible = false;
         this.p2.alertText.visible = false;
-
+                        
+        this.p1Sprite.setDisplaySize(150,150);
+        this.p2Sprite.setDisplaySize(150,150);
+        
         this.registry.set("p1", this.p1)
         this.registry.set("p2", this.p2)
     }
 
+    
     click(player,scene) {
+        const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
         player.count += 1;
         if (player == scene.p1) {
-            scene.emitter1.explode(Math.floor(Math.random()*5)+1)
-            scene.emitter1b.explode(Math.floor(Math.random()*5)+1)
+            scene.emitter1.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter1b.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter1c.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter1d.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter1e.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+
         } else {
-            scene.emitter2.explode(Math.floor(Math.random()*5)+1)
-            scene.emitter2b.explode(Math.floor(Math.random()*5)+1)
+            scene.emitter2.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter2b.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter2c.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter2d.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            scene.emitter2e.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
         }
     }
 
     alertUpgradeAvailable() {
+        
         if (this.p1.count >= this.p1.nextAt) {
-            this.p1.alert.visible = true;
-            this.p1.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
+           // this.p1.alert.visible = true;
+            this.p1.menuIcon.visible = true;
+            this.p1.menuIcon.angle += 3;
+           // this.p1.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
             this.p1.alertText.visible = true;
-         //   this.p1alerter.start();
+            this.p1alerter.start();
+           
         } else {
-            this.p1.alert.visible = false;
+           // this.p1.alert.visible = false;
             this.p1.alertText.visible = false;
-        //    this.p1alerter.stop();
-
+            this.p1alerter.stop();
+            this.p1.menuIcon.visible = false;
         }
         if (this.p2.count >= this.p2.nextAt) {
-            this.p2.alert.visible = true;
+            this.p2.menuIcon.visible = true;
+            this.p2.menuIcon.angle += 3;
+           // this.p2.alert.visible = true;
             this.p2.alertText.visible = true;
-            this.p2.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
-
-        //    this.p2alerter.start();
-
+            //this.p2.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
+            this.p2alerter.start();
         } else {
-            this.p2.alert.visible = false;
+         //   this.p2.alert.visible = false;
             this.p2.alertText.visible = false;
-        //    this.p2alerter.stop();
-
+            this.p2alerter.stop();
+            this.p2.menuIcon.visible = false;
         }
     }
 
     createParticles(){
-        let scene = this;
         var e1config = {
             speed: [150, 250],
             scale: { start: .2, end: 3},
@@ -395,34 +437,27 @@ class MainScene extends Phaser.Scene {
             lifespan: [500,2000]
         }
         
-        this.emitter1 = this.add.particles(scene.p1.LEFT, STATUS_TOP, 'hearto', e1config)
-        this.emitter1b = this.add.particles(scene.p1.LEFT, STATUS_TOP, 'shareo', e1config)
-        this.emitter2 = this.add.particles(scene.p2.LEFT, STATUS_TOP, 'heartb', e2config)
-        this.emitter2b = this.add.particles(scene.p2.LEFT, STATUS_TOP, 'shareb', e2config)
+        this.emitter1 = this.add.particles(0,0, 'hearto', e1config)
+        this.emitter1b = this.add.particles(0,0, 'shareo', e1config)
+        this.emitter1c = this.add.particles(0,0, 'planeo', e1config)
+        this.emitter1d = this.add.particles(0,0, 'reposto', e1config)
+        this.emitter1e = this.add.particles(0,0, 'nodeo', e1config)
+        
+        this.emitter2 = this.add.particles(0,0, 'heartb', e2config)
+        this.emitter2b = this.add.particles(0,0, 'shareb', e2config)
+        this.emitter2c = this.add.particles(0,0, 'planeb', e2config)
+        this.emitter2d = this.add.particles(0,0, 'repostb', e2config)
+        this.emitter2e = this.add.particles(0,0, 'nodeb', e2config)
+        
+        const alertConfig = {
+            speed: [150, 250],
+            scale: { start: .2, end: 1.5},
+            emitting: false,
+            lifespan: [200, 700]
+        };
 
-
-
-        // this.emitter2 = particles.createEmitter(e2config);
-
-        //this.emitter1 = particles.createEmitter(e1config);
-        // this.emitter1b = part2.createEmitter(e1config);
-        // this.emitter2b = part2.createEmitter(e2config);
-
-        // var alerticles = this.add.particles('alert');
-        // this.p1alerter = alerticles.createEmitter({
-        //     deathZone: {
-        //         type: 'onEnter',
-        //         source: new Phaser.Geom.Rectangle(scene.p1.alert.x-40,scene.p1.alert.y-12,100,100)
-        //     },
-        //     speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
-        // this.p1alerter.startFollow(this.p1.alert,0,-13);
-        // this.p1alerter.stop();
-        // this.p2alerter = alerticles.createEmitter({deathZone: {
-        //     type: 'onEnter',
-        //     source: new Phaser.Geom.Rectangle(scene.p2.alert.x-40,scene.p2.alert.y-12,100,100)
-        // },speed: 80,scale:{start:0.2,end:0.5}, lifespan:600})
-        // this.p2alerter.startFollow(this.p2.alert,0,-13);
-        // this.p2alerter.stop();
+        this.p1alerter = this.add.particles(L_MARGIN, STATUS_TOP, 'alert', alertConfig);
+        this.p2alerter = this.add.particles(WIDTH - L_MARGIN, STATUS_TOP, 'alert', alertConfig);
     }
 
     createUpgrades() {
