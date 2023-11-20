@@ -8,18 +8,21 @@ class MenuScene extends Phaser.Scene {
         this.lastTimeStamp = 0;
         this.CURSOR_START_X = 178;
         this.CURSOR_START_Y = 156;
-        this.CURSOR_BOTTOM_ROW = 700;
-        this.DIALOG_TOP_X = 112;
-        this.DIALOG_TOP_Y = 84;
-        this.DIALOG_WIDTH = 800;
-        this.DIALOG_HEIGHT = 600;
+        this.CURSOR_BOTTOM_ROW = 880;
+        this.DIALOG_TOP_X = 0;
+        this.DIALOG_TOP_Y = 80;
+        this.DIALOG_WIDTH = 1920;
+        this.DIALOG_HEIGHT = 1000;
         this.HATE_MACHINE_X = 240;
         this.COLUMN_2_X = 530;
         this.COLUMN_3_X = 750;
-        this.LINEHEIGHT = 60;
+        this.LINEHEIGHT = 80;
         this.IMAGEWIDTH = 50;
-        this.FIRST_UPDGRADE_Y = this.CURSOR_START_Y+ -this.LINEHEIGHT + 25;
+        this.FIRST_UPDGRADE_Y = this.CURSOR_START_Y;
         this.UNAVAILABLE_COL = 0x9b9b9b;
+        this.ORANGE = 0xff7930;
+        this.BLUE = 0x4184fb;
+        this.YELLOW = 0xffdd30;
     }
 
     preload() {
@@ -39,7 +42,6 @@ class MenuScene extends Phaser.Scene {
         this.load.image("follower", "assets/followers.png");
 
         this.load.image("hate", "assets/icons/hate.png");
-        
 
     }
 
@@ -79,7 +81,7 @@ class MenuScene extends Phaser.Scene {
         this.graphics.fillRect(this.DIALOG_TOP_X + 26,this.DIALOG_TOP_Y + 26,this.DIALOG_WIDTH - 52,this.DIALOG_HEIGHT - 56);
         this.player = this.registry.get(this.active);
 
-        this.cancelX = this.COLUMN_3_X;
+        this.cancelX = this.CURSOR_START_X;
         this.hateCost = Math.floor(100 * Math.pow(1.15,this.player.timesHated));
 
         this.drawInstructions(col);
@@ -130,7 +132,7 @@ class MenuScene extends Phaser.Scene {
             } else {
                 scene.emitter1.explode(13,scene.cursor.x, scene.cursor.y);
                 scene.hasBought = true;
-               // let index = (scene.cursor.y - 126) / 41;
+
                 let key = scene.upgradeKeys[scene.cursorIndex];
                 let thisUpgrade = scene.upgrades[key]; //this is stupid
                 let owned = 0;
@@ -185,18 +187,19 @@ class MenuScene extends Phaser.Scene {
     }
 
     createParticles() {
-        var particles = this.add.particles('heart');
-
         var e1config = {
-            speed: 150,
+            speed: 250,
             scale: { start: .2, end: 2 },
-            tint: this.active == "p1"? 0xff7930 : 0x4184fb,
-            on: false
+            emitting: false
         }
+        
+        this.emitter1 = this.add.particles(0,0, this.active == "p1" ? 'hearto' : 'heartb', e1config);
 
-        this.emitter1 = particles.createEmitter(e1config);
-
-        this.emitter2 = this.add.particles("hate").createEmitter({speed:150,scale:{start:.2, end:.2},on:false, x:this.CURSOR_START_X,y:this.CURSOR_BOTTOM_ROW});
+        this.emitter2 = this.add.particles(this.CURSOR_START_X, this.CURSOR_BOTTOM_ROW, "hate", {
+            speed: 250,
+            scale: {start:.2, end:.2}, 
+            emitting:false
+        });
     }
 
     moveToNextAffordable(startingIndex) {
@@ -239,9 +242,13 @@ class MenuScene extends Phaser.Scene {
         if (!this.hasDrawn || this.cursorIndex >= 8) return;
 
         this.upgradeDetailsBg.y = this.cursor.y;
-        this.buybutton.y = this.cursor.y + (this.LINEHEIGHT * 0.75);
+        this.upgradeDetailsBgBorder.y = this.cursor.y + 8;
+
         this.upgradeDetailsBg.visible = true;
+        this.upgradeDetailsBgBorder.visible = true;
+
         this.buybutton.visible = true;
+        this.buybuttonText.visible = true;
         
         this.dialogtext1.y = this.cursor.y - 50;
         this.dialogtext1.setText("+" + this.upgrades[this.upgradeKeys[this.cursorIndex]].rate.toFixed(1) + " f/sec");
@@ -256,30 +263,40 @@ class MenuScene extends Phaser.Scene {
 
     hideDialog() {
         this.upgradeDetailsBg.visible = false;
+        this.upgradeDetailsBgBorder.visible = false;
+
         this.buybutton.visible = false;
+        this.buybuttonText.visible = false;
+
         this.dialogtext1.visible = false;
         this.dialogFollower.visible = false;
         this.dialogFollowerText.visible = false;
-
     }
 
     createDialog() {
-        this.upgradeDetailsBg =  this.add.rectangle(this.COLUMN_3_X, this.cursor.y + 25, this.DIALOG_WIDTH/2, this.LINEHEIGHT * 2, 0x000000, 0.98);
+        this.upgradeDetailsBgBorder =  this.add.rectangle(this.COLUMN_3_X + 4, this.cursor.y + 29, 350, this.LINEHEIGHT * 2, this.YELLOW);
+        this.upgradeDetailsBg =  this.add.rectangle(this.COLUMN_3_X - 8, this.cursor.y + 25, 350, this.LINEHEIGHT * 2, 0x000000, 0.98);
         this.dialogtext1 = this.add.bitmapText(this.COLUMN_2_X + 60,this.cursor.y - 20,"type-y","+" + this.upgrades[this.upgradeKeys[this.cursorIndex]].rate.toFixed(1) + " f/sec",32);
+        
 
-        this.buybutton = this.add.image(this.COLUMN_2_X + (this.DIALOG_WIDTH/2) - 40,this.cursor.y + (this.LINEHEIGHT *0.75),"select");
+        //"move down" and "buy"
+        this.add.rectangle((this.DIALOG_WIDTH/2) + 50, this.cursor.y + (this.LINEHEIGHT *0.75), 64, 64,this.active == "p1" ? this.ORANGE : this.BLUE);
+        this.add.bitmapText((this.DIALOG_WIDTH/2) + 120, this.cursor.y + (this.LINEHEIGHT *0.75) - 32, "type-y", "move cursor", 48)
+        this.buybutton = this.add.rectangle((this.DIALOG_WIDTH/2) + 50, this.cursor.y + (this.LINEHEIGHT * 2), 64, 64, this.YELLOW);
+        this.buybuttonText = this.add.bitmapText((this.DIALOG_WIDTH/2) + 120, this.cursor.y + (this.LINEHEIGHT * 2) - 32, "type-y", "buy", 48)
+
+                
         this.dialogFollower = this.add.image(this.COLUMN_2_X + 65,this.cursor.y,"follower-lg");
         this.dialogFollowerText = this.add.bitmapText(this.COLUMN_2_X + 100, this.cursor.y,"type-y",
             this.upgrades[this.upgradeKeys[this.cursorIndex]].cost(this.player.upgrades[this.upgradeKeys[this.cursorIndex]] 
             == undefined ? 0: this.player.upgrades[this.upgradeKeys[this.cursorIndex]].owned),32);
 
         this.upgradeDetailsBg.depth = 100;
+        this.upgradeDetailsBgBorder.depth = 99;
         this.dialogtext1.depth = 101;
-        this.buybutton.depth = 101;
         this.dialogFollower.depth = 101;
         this.dialogFollowerText.depth = 101; 
         this.hideDialog();
-
     }
 
     update() {
@@ -307,37 +324,43 @@ class MenuScene extends Phaser.Scene {
     }
 
     drawInstructions(col){
+        //top bar
         this.graphics.fillStyle(0x000000,1);
-        this.graphics.fillRect(this.DIALOG_TOP_X,this.DIALOG_TOP_Y - 40,this.DIALOG_WIDTH,30)
-        this.add.image(this.HATE_MACHINE_X,this.DIALOG_TOP_Y - 25,this.active == "p1" ? "move1":"move2");
-        this.graphics.fillStyle(0x000000,1);
-        this.graphics.fillRect(this.DIALOG_TOP_X,this.CURSOR_BOTTOM_ROW - 5,this.DIALOG_WIDTH,50)
-
+        this.graphics.fillRect(0,0,this.DIALOG_WIDTH,this.DIALOG_TOP_Y)
+      
         this.countdownText = this.add.bitmapText(this.COLUMN_2_X, this.DIALOG_TOP_Y - 39, "type-y", "calculating... " + (((this.startSceneTime+500) - game.getTime())/100).toFixed(0),18);
+       
+        //cancel button
         this.add.image(this.cancelX,this.CURSOR_BOTTOM_ROW + 20, "cancel")
         this.add.bitmapText(this.cancelX+ this.IMAGEWIDTH,this.CURSOR_BOTTOM_ROW+5,"type-y","cancel",24);
     }
 
     drawUpgrades(){
         let idx = 0;
+        let canAfford = true;
         for (var key in this.upgrades){
             let image = key;
             if(!this.player.upgrades[key] && this.upgrades[key].cost(0) > this.player.count)  {
+                canAfford = false;
                 image = "question";
                 let desc1 = this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT * idx),"type-y",this.upgrades[key].cost(0),32);
-                desc1.setTint(this.UNAVAILABLE_COL);
+                desc1.setAlpha(0.5);
             } else {
+                canAfford = true;
                 let desc1 = this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT * idx),"type-y",this.upgrades[key].name,32);
                 let desc2 = this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.FIRST_UPDGRADE_Y+(this.LINEHEIGHT*idx) + 34,"type-y",this.upgrades[key].description,18);
                 let owned = this.player.upgrades[key] == undefined ? 0: this.player.upgrades[key].owned
                 if (this.upgrades[key].cost(owned) > this.player.count) {
-                    desc1.setTint(this.UNAVAILABLE_COL);
-                    desc2.setTint(this.UNAVAILABLE_COL);
+                    desc1.setAlpha(0.5);
+                    desc2.setAlpha(0.5);
+                    const cost = this.add.bitmapText(this.COLUMN_2_X,this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT * idx),"type-y",this.upgrades[key].cost(owned), 48);
+                    cost.setAlpha(0.5)
+                    canAfford = false;
                 }
                
             }
             let img = this.add.image(this.CURSOR_START_X, this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT * idx) + 25,image).setScale(1.25);
-            if (image == "question" || this.upgrades[key].cost(0) > this.player.count) img.setTint(this.UNAVAILABLE_COL);
+            if (!canAfford) img.setAlpha(0.5);
             idx++;
         }
 

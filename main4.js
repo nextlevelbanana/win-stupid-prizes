@@ -352,8 +352,6 @@ class MainScene extends Phaser.Scene {
         this.p1.timesHated= 0;
         this.p2.timesHated = 0;
 
-       // this.p1.alert = this.add.sprite(CENTER_X - 100,STATUS_L1_TOP + LINEHEIGHT,"alert")
-        //this.p2.alert = this.add.sprite(1024 - 100,STATUS_L1_TOP,"alert")
         this.p1.alertText = this.add.bitmapText(CENTER_X - 400, 980, "type-y", "Buy Influence!", SMALLFONTSIZE);
         this.p1.menuIcon = this.add.sprite(CENTER_X - 276, 880, "p1menu");
         this.p1.menuIcon.visible = false;
