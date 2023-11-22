@@ -27,8 +27,8 @@ class MainScene extends Phaser.Scene {
         this.load.image("splash", "assets/SSJ2019_logolarge.png");
 
         this.load.image('bg', 'assets/stupidPrizesBG-HD.png');
-        this.load.image('p1', 'assets/influencer1.png');
-        this.load.image('p2', 'assets/influencer2.png');
+        this.load.image('p1', 'assets/Red_Icon.png');
+        this.load.image('p2', 'assets/Blue_Icon.png');
 
         this.load.bitmapFont('type-y', 'assets/font/typewriter-yellow.png', 'assets/font/typewriter-yellow.fnt');
        
