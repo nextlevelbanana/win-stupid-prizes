@@ -69,16 +69,19 @@ class MainScene extends Phaser.Scene {
         const p1StatusX = L_MARGIN;
         const p2StatusX = CENTER_X + L_MARGIN;
         
-        const statusY = STATUS_L1_TOP + (LINEHEIGHT*2);
-        const statusY2 = STATUS_L1_TOP + (LINEHEIGHT*3.5);
+        const statusY = STATUS_L1_TOP + (LINEHEIGHT*1);
+        const statusY2 = STATUS_L1_TOP + (LINEHEIGHT*2.5);
 
         this.add.bitmapText(p1StatusX, statusY, 'type-y', this.p1.name, BIGFONTSIZE);
         this.add.bitmapText(p2StatusX, statusY, 'type-y', this.p2.name, BIGFONTSIZE);
         this.add.image(p1StatusX + 20, statusY2, 'follower-lg');
         this.add.image(p2StatusX + 20, statusY2, 'follower-lg');
+        
+        this.p1.hashtags = this.physics.add.group();
+        this.p2.hashtags = this.physics.add.group();
+        this.wall = this.add.rectangle(CENTER_X + 2, 0, 4, 2200, 0xaa9200);
+        this.physics.add.existing(this.wall, true);
 
-        scene.name1 = this.add.bitmapText(p1StatusX, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', BIGFONTSIZE);
-        scene.name2 = this.add.bitmapText(p2StatusX, STATUS_L1_TOP + (LINEHEIGHT * 2.7), 'type-y', '', BIGFONTSIZE);
 
         this.p1.scoreText = this.add.bitmapText(p1StatusX + 50, statusY2 - 15, 'type-y', this.formatFollowerString(this.p1), this.getFontSize(this.p1.count));
         this.p2.scoreText = this.add.bitmapText(p2StatusX + 50, statusY2 - 15, 'type-y', this.formatFollowerString(this.p2), this.getFontSize(this.p2.count));
@@ -244,7 +247,7 @@ class MainScene extends Phaser.Scene {
 
         });
 
-        this.events.addListener('resume', function(){
+        this.events.addListener('resume', (_, data) => {
             let p = scene.registry.get("hatedPlayer");
             if (p) {
                 if (p == "p1") {
@@ -253,10 +256,10 @@ class MainScene extends Phaser.Scene {
                     scene.p2.timeHated += 5000;
                 }
             }
-            if (scene.registry.get("active") == "p1") {
-                scene.name1.setText(Name.changeTags());
-            } else {
-                scene.name2.setText(Name.changeTags());
+            
+            const player = scene.registry.get("active");
+            if (data.hasBought) {
+                scene.spawnHashtag(player);
             }
             
             scene.input.enabled = true;
@@ -265,6 +268,19 @@ class MainScene extends Phaser.Scene {
         });
 
         this.createParticles();
+    }
+    
+    spawnHashtag(activePlayer) {
+        let scene = this;
+        const x = activePlayer == "p1" ? L_MARGIN : CENTER_X + L_MARGIN;
+        const tag = scene.add.bitmapText(x, 500, 'type-y', Name.getHashtag(), SMALLFONTSIZE);
+        
+        scene.physics.add.existing(tag, false);      
+
+        tag.body.setVelocity(Phaser.Math.Between(-400, 400), Phaser.Math.Between(-600, 600));
+        tag.body.setBounce(1, 1);
+        tag.body.setCollideWorldBounds(true);
+        scene.physics.add.collider(tag, scene.wall);
     }
 
     update(time,delta) {
@@ -332,8 +348,8 @@ class MainScene extends Phaser.Scene {
     createCharacters() {
         this.p1 = {}
         this.p2 = {}
-        this.p1.count = 0;
-        this.p2.count = 0;
+        this.p1.count = 100000000;
+        this.p2.count = 100000000;
 
         this.p1.name = Name.getName("p1");
         this.p2.name = Name.getName("p2");
@@ -562,16 +578,32 @@ class MainScene extends Phaser.Scene {
         let upgrades = this.registry.get("upgrades");
         for(var key in upgrades) {
             if (player.upgrades[key]) {
-                this.add.image(player == this.p1? MARGIN:CENTER_X + MARGIN, MARGIN+((LINEHEIGHT + 15)*drawn),key)
+                const y = 75 + (LINEHEIGHT*1.5)*drawn;
+                const textY = y - (LINEHEIGHT/2);
+                const x = player == this.p1? L_MARGIN : CENTER_X + L_MARGIN;
+                const x2 = x + 60;
+                
+                const img = this.add.image(x, y, key);
+                img.setScale(1.25);
+                
+                
+                
                 if (!player.upgrades[key].displayText) {
-                    player.upgrades[key].displayText = this.add.bitmapText(player == this.p1? (MARGIN * 1.5) + 3 
-                        : this.p2.LEFT + 3 + (MARGIN/2),LINEHEIGHT+((LINEHEIGHT+15)*drawn), "type-y","X" + player.upgrades[key].owned, 32)
-                    player.upgrades[key].rateText = this.add.bitmapText(player == this.p1? this.p1.LEFT + 150 
-                        : this.p2.LEFT + 150,LINEHEIGHT+3+((LINEHEIGHT+15)*drawn), "type-y", "+" + (upgrades[key].rate * player.upgrades[key].owned).toFixed(1) + " f/sec", 24)
+                    player.upgrades[key].displayText = this.add.bitmapText(
+                        x2,
+                        textY, 
+                        "type-y",
+                        "x" + player.upgrades[key].owned, 
+                        BIGFONTSIZE);
+                    player.upgrades[key].rateText = this.add.bitmapText(
+                        x2 + 180,
+                        textY + 6, 
+                        "type-y", 
+                        "+" + (upgrades[key].rate * player.upgrades[key].owned).toFixed(1) + " f/sec", 24   )
                 } else {
-                    player.upgrades[key].displayText.y = LINEHEIGHT + ((LINEHEIGHT+15)*drawn)
-                    player.upgrades[key].displayText.setText("X" + player.upgrades[key].owned);
-                    player.upgrades[key].rateText.y = LINEHEIGHT + 3 + ((LINEHEIGHT + 15)*drawn);   
+                    player.upgrades[key].displayText.y = textY + 6;
+                    player.upgrades[key].displayText.setText("x" + player.upgrades[key].owned);
+                    player.upgrades[key].rateText.y = textY + 6; 
                     player.upgrades[key].rateText.setText("+" + (upgrades[key].rate * player.upgrades[key].owned).toFixed(1) + " f/sec")
                 }
                 drawn++

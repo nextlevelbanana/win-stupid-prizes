@@ -12,15 +12,15 @@ class Name {
         return "@" + A + B;
     }
 
-    static changeTags() {
+    static getHashtag() {
         let data = game.cache.text.get('tagList').split("\n");
-        let name = "#" + data[Math.floor(Math.random()*data.length)];
-        let tag2 = "#" + data[Math.floor(Math.random()*data.length)];
+        return "#" + data[Math.floor(Math.random()*data.length)];
+       // let tag2 = "#" + data[Math.floor(Math.random()*data.length)];
        
-        if ((name + " " + tag2).length < 26) {
-            return name + " " + tag2;
-        } else {
-            return name;
-        }
+        // if ((name + " " + tag2).length < 26) {
+        //     return name + " " + tag2;
+        // } else {
+        //     return name;
+        // }
     }
 }

@@ -120,14 +120,14 @@ class MenuScene extends Phaser.Scene {
             if (scene.cursorIndex >= 9) {
                 //cancel
                 if (scene.cursor.x == scene.cancelX) {
-                    scene.exitScene();
+                    scene.exitScene(false, false);
                 } else {
                     scene.hasBought = true;
                     //hate mob
                     scene.emitter2.explode(13,scene.cursor.x, scene.cursor.y);
                     scene.player.timesHated++;
                     scene.player.count -= scene.hateCost;
-                    scene.exitScene(true);
+                    scene.exitScene(true, true);
                 }
             } else {
                 scene.emitter1.explode(13,scene.cursor.x, scene.cursor.y);
@@ -154,7 +154,7 @@ class MenuScene extends Phaser.Scene {
 
                 scene.registry.set(this.active, scene.player);
                 
-                scene.time.delayedCall(500,scene.exitScene, [], scene);
+                scene.time.delayedCall(500,() => scene.exitScene(false, true), [], scene);
             }
         });
     }
@@ -163,7 +163,7 @@ class MenuScene extends Phaser.Scene {
         return (this.player.upgrades["scheduled"] && (this.player.upgrades["scheduled"].owned >= 10*(1+this.player.timesHated)));
     }
 
-    exitScene(isHating) {
+    exitScene(isHating, didBuy) {
         if (isHating) {
             let hatedPlayer = this.active == "p1" ? "p2" : "p1";
             this.registry.set("hatedPlayer", hatedPlayer);
@@ -171,7 +171,7 @@ class MenuScene extends Phaser.Scene {
             this.registry.set("hatedPlayer", null);
         }
         this.scene.stop();
-        this.scene.resume("Main");
+        this.scene.resume("Main", {hasBought: didBuy});
     }
 
     calcNext() {
@@ -223,7 +223,6 @@ class MenuScene extends Phaser.Scene {
         this.cursor.x = this.CURSOR_START_X;
 
         let key = this.upgradeKeys[startingIndex+1];
-        console.log("index: " + startingIndex, "key: " + key);
         let thisUpgrade = this.upgrades[key]; //this is stupid
         let owned = 0;
         if (this.player.upgrades[key]) {

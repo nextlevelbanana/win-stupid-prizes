@@ -529,9 +529,7 @@ class Title extends Phaser.Scene {
         let scene = this;
         this.add.image(400,300,"title");
         this.add.bitmapText(270,350,"type-y", "(press any key)", 32)
-        console.log("here")
         this.input.keyboard.on("keyup", function(){
-            console.log("keyed up")
             scene.scene.stop();
             scene.scene.start("Instructions");
         });
