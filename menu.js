@@ -82,7 +82,7 @@ class MenuScene extends Phaser.Scene {
         this.graphics.fillRect(this.DIALOG_TOP_X + 26,this.DIALOG_TOP_Y + 26,this.DIALOG_WIDTH - 52,this.DIALOG_HEIGHT - 56);
         this.player = this.registry.get(this.active);
 
-        this.hateCost = Math.floor(100 * Math.pow(1.15,this.player.timesHated));
+        this.hateCost = Math.floor(100 * Math.pow(1.55,this.player.timesHated));
 
         this.drawInstructions(col);
 
@@ -219,7 +219,6 @@ class MenuScene extends Phaser.Scene {
         else if (startingIndex == 8) {
             //we need to move to the hate machine
             this.hideDialog();
-            //this.cursorIndex = 9;
             this.cursor.y = this.HATE_Y;
         }
         else {
