@@ -214,12 +214,16 @@ class MenuScene extends Phaser.Scene {
             //move from hate to cancel
             this.hideDialog();
             this.cursor.y = this.CURSOR_BOTTOM_ROW + 20;
-
         }
         else if (startingIndex == 8) {
             //we need to move to the hate machine
             this.hideDialog();
-            this.cursor.y = this.HATE_Y;
+            if (this.player.count > this.hateCost) {
+                this.cursor.y = this.HATE_Y;
+            } else {
+                this.moveToNextAffordable(9)
+            }
+            
         }
         else {
             let key = this.upgradeKeys[startingIndex+1];
@@ -364,12 +368,17 @@ class MenuScene extends Phaser.Scene {
         }
 
         if (this.shouldShowHateMachine()) {
+            
             let hateImg = this.add.image(this.CURSOR_START_X,this.HATE_Y,"hate");
             hateImg.setScale(1.25);
-            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y - 20,"type-y","Hate Mob",24);
-            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y + 5,"type-y","Rival rate = 0 for 5 sec",16);
-            this.add.image(this.COLUMN_2_X,this.HATE_Y +- 3,"follower-lg");
-            this.add.bitmapText(this.COLUMN_2_X + 33,this.HATE_Y - 8, "type-y", this.hateCost,24);
+            if (this.hateCost < this.player.count) {
+                this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y - 20,"type-y","Hate Mob",24);
+                this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y + 5,"type-y","Rival rate = 0 for 5 sec",16);
+                this.add.image(this.COLUMN_2_X,this.HATE_Y +- 3,"follower-lg");
+                this.add.bitmapText(this.COLUMN_2_X + 33,this.HATE_Y - 8, "type-y", this.hateCost,24);
+            } else {
+                hateImg.setAlpha(0.5);
+            }
         }
     }
 

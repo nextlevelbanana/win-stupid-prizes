@@ -350,8 +350,8 @@ class MainScene extends Phaser.Scene {
     createCharacters() {
         this.p1 = {}
         this.p2 = {}
-        this.p1.count = 100000000;
-        this.p2.count = 100000000;
+        this.p1.count = 0;
+        this.p2.count = 0;
 
         this.p1.name = Name.getName("p1");
         this.p2.name = Name.getName("p2");
