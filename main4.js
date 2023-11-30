@@ -91,9 +91,11 @@ class MainScene extends Phaser.Scene {
     
         this.time.delayedCall(300, () => {this.input.enabled = true;},null,this);
 
-        this.p1.hateSprite = this.add.image(258,248,"hate-lg");
+        this.p1.hateSprite = this.add.image(456+30,50+456,"hate-lg");
+        this.p1.hateSprite.setScale(1.75);
         this.p1.hateSprite.visible = false;
-        this.p2.hateSprite = this.add.image(770,248,"hate-lg");
+        this.p2.hateSprite = this.add.image(CENTER_X + 30 + (456),(456) + 50,"hate-lg");
+        this.p2.hateSprite.setScale(1.75);
         this.p2.hateSprite.visible = false;
 
         this.cursors = this.input.keyboard.createCursorKeys();   
@@ -387,7 +389,8 @@ class MainScene extends Phaser.Scene {
     
     click(player,scene) {
         const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-
+        if (player.timeHated > 0 ) return;
+        
         player.count += 1;
         if (player == scene.p1) {
             scene.emitter1.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
@@ -553,8 +556,7 @@ class MainScene extends Phaser.Scene {
                 cost: function(owned){
                     return Math.floor(100000000* Math.pow(1.15,owned))
                 }
-            }
-
+            },
         }
         this.registry.set("upgrades", upgrades);
     }

@@ -8,12 +8,13 @@ class MenuScene extends Phaser.Scene {
         this.lastTimeStamp = 0;
         this.CURSOR_START_X = 178;
         this.CURSOR_START_Y = 156;
-        this.CURSOR_BOTTOM_ROW = 880;
+        this.CURSOR_BOTTOM_ROW = 960;
         this.DIALOG_TOP_X = 0;
         this.DIALOG_TOP_Y = 80;
         this.DIALOG_WIDTH = 1920;
         this.DIALOG_HEIGHT = 1000;
         this.HATE_MACHINE_X = 240;
+        this.HATE_Y = this.CURSOR_BOTTOM_ROW - 60;
         this.COLUMN_2_X = 530;
         this.COLUMN_3_X = 750;
         this.LINEHEIGHT = 80;
@@ -81,7 +82,6 @@ class MenuScene extends Phaser.Scene {
         this.graphics.fillRect(this.DIALOG_TOP_X + 26,this.DIALOG_TOP_Y + 26,this.DIALOG_WIDTH - 52,this.DIALOG_HEIGHT - 56);
         this.player = this.registry.get(this.active);
 
-        this.cancelX = this.CURSOR_START_X;
         this.hateCost = Math.floor(100 * Math.pow(1.15,this.player.timesHated));
 
         this.drawInstructions(col);
@@ -100,11 +100,7 @@ class MenuScene extends Phaser.Scene {
             scene.lastSelectTimeStamp = ev.timeStamp;
 
             if (scene.cursor.y == scene.CURSOR_BOTTOM_ROW) {
-                if (scene.cursor.x == scene.cancelX) {
                  scene.moveToNextAffordable(-1);
-                } else {
-                    scene.cursor.x = scene.cancelX;
-                }
             } else {
                  scene.moveToNextAffordable(scene.cursorIndex);
             }
@@ -117,18 +113,16 @@ class MenuScene extends Phaser.Scene {
             if (ev.timeStamp == scene.lastTimeStamp || ev.timeStamp < scene.startSceneTime + 500) return;
             scene.lastTimeStamp = ev.timeStamp;
 
-            if (scene.cursorIndex >= 9) {
-                //cancel
-                if (scene.cursor.x == scene.cancelX) {
+            if (scene.cursorIndex == 10) {
                     scene.exitScene(false, false);
-                } else {
-                    scene.hasBought = true;
-                    //hate mob
-                    scene.emitter2.explode(13,scene.cursor.x, scene.cursor.y);
-                    scene.player.timesHated++;
-                    scene.player.count -= scene.hateCost;
-                    scene.exitScene(true, true);
-                }
+            } else if (scene.cursorIndex == 9) {
+                scene.hasBought = true;
+                //hate mob
+                console.log("hate mob!")
+                scene.emitter2.explode(13,scene.cursor.x, scene.cursor.y);
+                scene.player.timesHated++;
+                scene.player.count -= scene.hateCost;
+                scene.exitScene(true, true);
             } else {
                 scene.emitter1.explode(13,scene.cursor.x, scene.cursor.y);
                 scene.hasBought = true;
@@ -160,7 +154,7 @@ class MenuScene extends Phaser.Scene {
     }
 
     shouldShowHateMachine() {
-        return (this.player.upgrades["scheduled"] && (this.player.upgrades["scheduled"].owned >= 10*(1+this.player.timesHated)));
+        return true;//(this.player.upgrades["scheduled"] && (this.player.upgrades["scheduled"].owned >= 10*(1+this.player.timesHated)));
     }
 
     exitScene(isHating, didBuy) {
@@ -195,7 +189,7 @@ class MenuScene extends Phaser.Scene {
         
         this.emitter1 = this.add.particles(0,0, this.active == "p1" ? 'hearto' : 'heartb', e1config);
 
-        this.emitter2 = this.add.particles(this.CURSOR_START_X, this.CURSOR_BOTTOM_ROW, "hate", {
+        this.emitter2 = this.add.particles(this.CURSOR_START_X, this.HATE_Y, "hate", {
             speed: 250,
             scale: {start:.2, end:.2}, 
             emitting:false
@@ -203,38 +197,45 @@ class MenuScene extends Phaser.Scene {
     }
 
     moveToNextAffordable(startingIndex) {
-        if(startingIndex == 8) {
-            this.hideDialog();
-            //move to cancel button
-            this.cursor.y = this.CURSOR_BOTTOM_ROW + 20;
-            this.cursor.x = this.shouldShowHateMachine() ? this.CURSOR_START_X : this.cancelX;
-
-            if (this.shouldShowHateMachine() && this.player.count < this.hateCost) {
-                this.cursor.x = this.cancelX;
-            } 
-            this.cursorIndex = 9;
-            return 
-        } else if (startingIndex == 9) {
-            this.hideDialog();
-            this.cursorIndex = 0;
-            return this.moveToNextAffordable(-1);
-        }
-
         this.cursor.x = this.CURSOR_START_X;
 
-        let key = this.upgradeKeys[startingIndex+1];
-        let thisUpgrade = this.upgrades[key]; //this is stupid
-        let owned = 0;
-        if (this.player.upgrades[key]) {
-            owned = this.player.upgrades[key].owned;
+        //0-8 are normal upgrades
+        //9 is hate mob
+        //10 is cancel
+        
+        this.cursorIndex = startingIndex == 10  || startingIndex < 0 ? 0 : this.cursorIndex + 1;
+        if (startingIndex == 10) {
+            //we're on the cancel button and need to loop around
+            this.hideDialog();
+            this.cursorIndex = -1;
+            return this.moveToNextAffordable(-1);
         }
-        while (thisUpgrade.cost(owned) > this.player.count) {
-            return this.moveToNextAffordable(startingIndex+1)
-        }
-        this.cursor.y = this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT*(startingIndex+1)) + 25;
-        this.cursorIndex = startingIndex+1;
+        else if (startingIndex == 9) {
+            //move from hate to cancel
+            this.hideDialog();
+            this.cursor.y = this.CURSOR_BOTTOM_ROW + 20;
 
-        this.showDialog();
+        }
+        else if (startingIndex == 8) {
+            //we need to move to the hate machine
+            this.hideDialog();
+            //this.cursorIndex = 9;
+            this.cursor.y = this.HATE_Y;
+        }
+        else {
+            let key = this.upgradeKeys[startingIndex+1];
+            let thisUpgrade = this.upgrades[key]; //this is stupid
+            let owned = 0;
+            if (this.player.upgrades[key]) {
+                owned = this.player.upgrades[key].owned;
+            }
+            while (thisUpgrade.cost(owned) > this.player.count) {
+                return this.moveToNextAffordable(startingIndex+1)
+            }
+            this.cursor.y = this.FIRST_UPDGRADE_Y + (this.LINEHEIGHT*(startingIndex+1)) + 25;
+
+            this.showDialog();
+        }
     }
 
     showDialog() {
@@ -330,8 +331,8 @@ class MenuScene extends Phaser.Scene {
         this.countdownText = this.add.bitmapText(this.COLUMN_2_X, this.DIALOG_TOP_Y - 39, "type-y", "calculating... " + (((this.startSceneTime+500) - game.getTime())/100).toFixed(0),18);
        
         //cancel button
-        this.add.image(this.cancelX,this.CURSOR_BOTTOM_ROW + 20, "cancel")
-        this.add.bitmapText(this.cancelX+ this.IMAGEWIDTH,this.CURSOR_BOTTOM_ROW+5,"type-y","cancel",24);
+        this.add.image(this.CURSOR_START_X ,this.CURSOR_BOTTOM_ROW + 20, "cancel")
+        this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.CURSOR_BOTTOM_ROW+5,"type-y","cancel",24);
     }
 
     drawUpgrades(){
@@ -364,14 +365,12 @@ class MenuScene extends Phaser.Scene {
         }
 
         if (this.shouldShowHateMachine()) {
-            let hateImg = this.add.image(this.CURSOR_START_X,this.CURSOR_BOTTOM_ROW + 20,"hate");
+            let hateImg = this.add.image(this.CURSOR_START_X,this.HATE_Y,"hate");
             hateImg.setScale(1.25);
-            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.CURSOR_BOTTOM_ROW + 2,"type-y","Hate Mob",24);
-            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.CURSOR_BOTTOM_ROW + 27,"type-y","Rival rate = 0 for 5 sec",16);
-            this.add.image(this.COLUMN_2_X,this.CURSOR_BOTTOM_ROW + 17,"follower-lg");
-            //this.add.image(350,535,"scheduled").setScale(0.48);
-            this.add.bitmapText(this.COLUMN_2_X + 33,this.CURSOR_BOTTOM_ROW + 12, "type-y", this.hateCost,24);
-           // this.add.bitmapText(370,530, "type-y", (1+this.player.timesHated)*10 ,12);        
+            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y - 20,"type-y","Hate Mob",24);
+            this.add.bitmapText(this.CURSOR_START_X + this.IMAGEWIDTH,this.HATE_Y + 5,"type-y","Rival rate = 0 for 5 sec",16);
+            this.add.image(this.COLUMN_2_X,this.HATE_Y +- 3,"follower-lg");
+            this.add.bitmapText(this.COLUMN_2_X + 33,this.HATE_Y - 8, "type-y", this.hateCost,24);
         }
     }
 
