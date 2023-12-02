@@ -10,7 +10,7 @@ const MARGIN = 450;
 const LINEHEIGHT = 50;
 const BIGFONTSIZE = 48;
 const SMALLFONTSIZE = 36;
-const GAMEOVER = Number.MAX_SAFE_INTEGER;
+const GAMEOVER = 66666;
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -314,6 +314,8 @@ class MainScene extends Phaser.Scene {
     }
 
     startMenu(player) {
+        if (this[player].timeHated > 0) return;
+        
         this.input.enabled = false;
         this.registry.set("p1", this.p1);
         this.registry.set("p2", this.p2);
@@ -350,8 +352,8 @@ class MainScene extends Phaser.Scene {
     createCharacters() {
         this.p1 = {}
         this.p2 = {}
-        this.p1.count = 0;
-        this.p2.count = 0;
+        this.p1.count = 40000;
+        this.p2.count = 40000;
 
         this.p1.name = Name.getName("p1");
         this.p2.name = Name.getName("p2");
