@@ -28,7 +28,7 @@ class GameOver extends Phaser.Scene {
                 }
             }
 
-        this.add.bitmapText(100,620,"type-y", "Congratulations?",32);
+        this.add.bitmapText(1000,1080/3,"type-y", "Congratulations?", 48);
 
         this.add.image(140,210,this.registry.get("winner"))
         this.time.delayedCall(3000, this.startListening,null,this);
@@ -42,7 +42,7 @@ class GameOver extends Phaser.Scene {
 
     startListening() {
         this.input.enabled = true;
-        this.add.bitmapText(100,650,"type-y", "Press a key to play again!", 44);
+        this.add.bitmapText(1000,1080/2,"type-y", "Press a key to play again!", 48);
     }
 }
 game.scene.add("GameOver", GameOver, false);

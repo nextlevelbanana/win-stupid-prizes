@@ -1,5 +1,5 @@
-const RXN_TIME = 200;
 const WIDTH = 1920;
+const HEIGHT = 1080;
 const CENTER_X = 1920/2;
 const CENTER_Y = 1080/2;
 const STATUS_TOP = 1080/3*2;
@@ -10,7 +10,7 @@ const MARGIN = 450;
 const LINEHEIGHT = 50;
 const BIGFONTSIZE = 48;
 const SMALLFONTSIZE = 36;
-const GAMEOVER = 66666;
+const GAMEOVER = 100000;
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -31,6 +31,9 @@ class MainScene extends Phaser.Scene {
         this.load.image('p2', 'assets/Blue_Icon.png');
 
         this.load.bitmapFont('type-y', 'assets/font/typewriter-yellow.png', 'assets/font/typewriter-yellow.fnt');
+        this.load.bitmapFont('type-b', 'assets/font/typewriter-blue.png', 'assets/font/typewriter-blue.fnt');
+        this.load.bitmapFont('type-o', 'assets/font/typewriter-orange.png', 'assets/font/typewriter-orange.fnt');
+
        
         this.load.image('hearto', 'assets/heart-orange.png');
         this.load.image('heartb', 'assets/heart-blue.png');
@@ -101,152 +104,26 @@ class MainScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();   
         let lastLTimeStamp = 0;
         let lastRTimeStamp = 0;
-        let lastDTimeStamp = 0;
 
-        this.input.keyboard.on("keyup", function(ev){
-            let leftEv = scene.cursors.left.originalEvent;
-            let rightEv = scene.cursors.right.originalEvent;
+        this.input.keyboard.on("keydown", function(ev){
 
-            //If DOWN just released,
-            if (ev.key == "ArrowDown") {
-                if (ev.timeStamp <= lastDTimeStamp) return;
-                lastDTimeStamp = ev.timeStamp;
-                //and no other key pressed ever/lately? return.
-                if (!leftEv || leftEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                    if (!rightEv || rightEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                            scene.cursors.down.reset();
-                            return;
-                    } 
-                }
-                //--------------------------------------------
-
-                //and LEFT just released? 
-                if (leftEv && leftEv.type == "keyup" && leftEv.timeStamp + RXN_TIME > ev.timeStamp){
-                    //If right not released, or not lately, fire left menu
-                    if (!rightEv || rightEv.type != "keyup" || rightEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                        lastLTimeStamp = leftEv.timeStamp;
-                        scene.startMenu("p1"); 
-                        return;
-                    } else {
-                        //but if right fired recently, menu the most recent fire and click the loser
-                        let winner = leftEv.timeStamp > rightEv.timeStamp ? scene.p1: scene.p2;
-                        scene.click(winner == scene.p1 ? scene.p2:scene.p1);
-
-                        //don't process the "click"
-                        if (winner == scene.p1) {
-                            lastLTimeStamp = leftEv.timeStamp;
-                        } else {
-                            lastRTimeStamp = rightEv.timeStamp;
-                        }
-
-                        scene.startMenu(winner == scene.p1 ? "p1":"p2");
-                        return;
-                    }
-                }
-
-                //and RIGHT just released? Mirror above.
-                if (rightEv && rightEv.type == "keyup" && rightEv.timeStamp + RXN_TIME > ev.timeStamp){
-                    if (!leftEv || leftEv.type != "keyup" || leftEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                        lastRTimeStamp = rightEv.timeStamp;
-                        scene.startMenu("p2"); 
-                        return;
-                    } else {
-                        let winner = leftEv.timeStamp > rightEv.timeStamp ? scene.p1: scene.p2;
-                        scene.click(winner == scene.p1 ? scene.p2:scene.p1);
-
-                        //don't process the "click"?
-                        if (winner == scene.p1) {
-                            lastLTimeStamp = leftEv.timeStamp || 0;
-                        } else {
-                            lastRTimeStamp = rightEv.timeStamp || 0;
-                        }
-
-                        scene.startMenu(winner == scene.p1 ? "p1":"p2");
-                        return;
-                    }
-                }
-
-                //What if no key just released, but one or both has been pressed? 
-                //I hate this.
-                //if left down, but no right/lately, menu p1
-                if (leftEv && leftEv.type == "keydown") {
-                    if (!rightEv || rightEv.type != "keydown" || rightEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                        lastLTimeStamp = leftEv.timeStamp;
-                        scene.startMenu("p1");
-                        return;
-                    } else {
-                        //fire menu for player whose keydown is closer to menudown,
-                        //and ignore the other click
-                        var targetTime = scene.cursors.down.timeDown;
-                        var leftGap = Math.abs(scene.cursors.left.timeDown - targetTime);
-                        var rightGap = Math.abs(scene.cursors.right.timeDown - targetTime);
-                        let winner = leftGap < rightGap? scene.p1:scene.p2;
-
-                        if (winner == scene.p1) {
-                            lastLTimeStamp = leftEv.timeStamp || 0;
-                        } else {
-                            lastRTimeStamp = rightEv.timeStamp || 0;
-                        }
-
-                        scene.startMenu(winner == scene.p1 ? "p1":"p2");
-                        return;
-                    }
-                }
-
-                //if right down, mirror above
-                if (rightEv && rightEv.type == "keydown") {
-                    if (!leftEv || leftEv.type != "keydown" || leftEv.timeStamp + RXN_TIME < ev.timeStamp) {
-                        lastRTimeStamp = rightEv.timeStamp;
-                        scene.startMenu("p2");
-                        return;
-                    } else {
-                        var targetTime = scene.cursors.down.timeDown;
-                        var leftGap = Math.abs(scene.cursors.left.timeDown - targetTime);
-                        var rightGap = Math.abs(scene.cursors.right.timeDown - targetTime);
-                        let winner = leftGap < rightGap? "p1":"p2";
-
-                        if (winner == scene.p1) {
-                            lastLTimeStamp = leftEv.timeStamp || 0;
-                        } else {
-                            lastRTimeStamp = rightEv.timeStamp || 0;
-                        }
-
-                        scene.startMenu(winner);
-                        return;
-                    }
-                }
-            } //end dealing with DOWN keyup
-            else {
-                if (scene.cursors.down.originalEvent && (scene.cursors.down.originalEvent.timeStamp == ev.timeStamp || scene.cursors.down.isDown)) {
-                //what if DOWN is down and ABOUT to be released??
-                    var targetTime = scene.cursors.down.timeDown;
-                    var leftGap = Math.abs(scene.cursors.left.timeDown - targetTime);
-                    var rightGap = Math.abs(scene.cursors.right.timeDown - targetTime);
-                    let winner = leftGap < rightGap? "p1":"p2";
-
-                    if (winner == scene.p1) {
-                        lastLTimeStamp = leftEv? leftEv.timeStamp : 0;
-                    } else {
-                        lastRTimeStamp = rightEv? rightEv.timeStamp : 0;
-                    }
-
-                    scene.startMenu(winner);
-                } else {
-                    if (ev.key == "ArrowLeft") {
-                        if (ev.timeStamp <= lastLTimeStamp) return;
-                        lastLTimeStamp = ev.timeStamp;
-                        scene.click(scene.p1, scene);
-                        return;
-                    }
-                    if (ev.key == "ArrowRight") {
-                        if (ev.timeStamp <= lastRTimeStamp) return;
-                        lastRTimeStamp = ev.timeStamp;
-                        scene.click(scene.p2, scene);
-                        return;
-                    }
-                }
-            } 
-
+            if (scene.cursors.down.isDown) {
+                return;
+            }
+            
+            if (ev.key == "ArrowLeft") {
+                
+                if (ev.timeStamp <= lastLTimeStamp) return;
+                lastLTimeStamp = ev.timeStamp;
+                scene.click(scene.p1, scene);
+                return;
+            }
+            if (ev.key == "ArrowRight") {
+                if (ev.timeStamp <= lastRTimeStamp) return;
+                lastRTimeStamp = ev.timeStamp;
+                scene.click(scene.p2, scene);
+                return;
+            }
         });
 
         this.events.addListener('resume', (_, data) => {
@@ -286,6 +163,30 @@ class MainScene extends Phaser.Scene {
     }
 
     update(time,delta) {
+        
+        if (this.cursors.down.isDown) {
+                console.log("checking")
+                if (this.cursors.left.timeDown || this.cursors.right.timeDown) {
+                    if (this.cursors.left.timeDown == this.cursors.right.timeDown) {
+                        const winner = Phaser.Utils.Array.GetRandom(["p1", "p2"])
+                        this.startMenu(winner)
+                    } else {
+                        let winner;
+                        if (this.cursors.left.isDown && !this.cursors.right.isDown) {
+                            winner = "p1";
+                        } else if (this.cursors.right.isDown && !this.cursors.left.isDown) {
+                            winner = "p2";
+                        }
+                        
+                        if (!winner) console.log("no arrow down")
+                        else                         this.startMenu(winner)
+
+                            // this.cursors.left.timeDown > this.cursors.right.timeDown 
+                            // ? "p1"
+                            // : "p2")
+                    }
+                }
+        } 
 
         if (this.p1.timeHated > 0) {
             this.p1.timeHated -= delta;
@@ -306,6 +207,7 @@ class MainScene extends Phaser.Scene {
 
         this.alertUpgradeAvailable();
         this.checkGameOver();
+        
 
         this.p1.scoreText.setText(this.formatFollowerString(this.p1));
         this.p2.scoreText.setText(this.formatFollowerString(this.p2));
@@ -352,8 +254,8 @@ class MainScene extends Phaser.Scene {
     createCharacters() {
         this.p1 = {}
         this.p2 = {}
-        this.p1.count = 40000;
-        this.p2.count = 40000;
+        this.p1.count = 0;
+        this.p2.count = 0;
 
         this.p1.name = Name.getName("p1");
         this.p2.name = Name.getName("p2");
@@ -390,8 +292,10 @@ class MainScene extends Phaser.Scene {
 
     
     click(player,scene) {
-        const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
         if (player.timeHated > 0 ) return;
+        
+
         
         player.count += 1;
         if (player == scene.p1) {
@@ -400,6 +304,14 @@ class MainScene extends Phaser.Scene {
             scene.emitter1c.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
             scene.emitter1d.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
             scene.emitter1e.explode(Math.random()*3, Math.min(Math.random()*CENTER_X, CENTER_X), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            
+            scene.tweens.add({
+                targets: scene.p1Sprite,
+                duration: 75,
+                scale: 1.5,
+                yoyo: true,
+                onComplete: () => scene.p1Sprite.setDisplaySize(150,150)
+            })
 
         } else {
             scene.emitter2.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
@@ -407,6 +319,14 @@ class MainScene extends Phaser.Scene {
             scene.emitter2c.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
             scene.emitter2d.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
             scene.emitter2e.explode(Math.random()*3, Math.min((Math.random()*CENTER_X)+CENTER_X, WIDTH), Math.min(Math.random() * STATUS_TOP, STATUS_L1_TOP));
+            
+            scene.tweens.add({
+                targets: scene.p2Sprite,
+                duration: 75,
+                scale: 1.5,
+                yoyo: true,
+                onComplete: () => scene.p2Sprite.setDisplaySize(150,150)
+            })
         }
     }
 
@@ -418,12 +338,12 @@ class MainScene extends Phaser.Scene {
             this.p1.menuIcon.angle += 3;
            // this.p1.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
             this.p1.alertText.visible = true;
-            this.p1alerter.start();
+           // this.p1alerter.start();
            
         } else {
            // this.p1.alert.visible = false;
             this.p1.alertText.visible = false;
-            this.p1alerter.stop();
+            //this.p1alerter.stop();
             this.p1.menuIcon.visible = false;
         }
         if (this.p2.count >= this.p2.nextAt) {
@@ -432,7 +352,7 @@ class MainScene extends Phaser.Scene {
            // this.p2.alert.visible = true;
             this.p2.alertText.visible = true;
             //this.p2.alert.y = STATUS_L1_TOP + (6 * Math.sin(this.time.now /3));
-            this.p2alerter.start();
+           // this.p2alerter.start();
         } else {
          //   this.p2.alert.visible = false;
             this.p2.alertText.visible = false;
@@ -481,84 +401,71 @@ class MainScene extends Phaser.Scene {
 
     createUpgrades() {
         let upgrades = {
-            "scheduled": {
+            "scheduled": new Upgrade({
                 name: "Scheduled Post",
                 description: "influence on the reg",
                 rate: 0.1,
+                baseCost: 15,
                 icon: "scheduled",
-                cost: function(owned) {
-                    return Math.floor(15 * Math.pow(1.5,owned))
-                }
-            },
-            "sponsored": {
+                increase: 1.5
+            }),
+            "sponsored": new Upgrade({
                 name:"SponCon",
                 description: "#ad #authentic #bestLife",
                 rate: 0.5,
                 icon: "question",
-                cost: function(owned) {
-                    return Math.floor(75 * Math.pow(1.15,owned))
-                }
-            },
-            "research": {
+                baseCost: 75,
+                increase: 1.15
+            }),
+            "research": new Upgrade({
                 name: "Market Research",
                 description: "know your #audience",
                 rate: 4,
-                cost: function(owned) {
-                    return Math.floor(350 * Math.pow(1.1,owned))
-                }        
-            },
-            "bots": {
+                baseCost: 350,
+                increase: 1.3     
+            }),
+            "bots": new Upgrade({
                 name: "Buy Bots",
                 description: "Fake it till ya make it, bb",
-                rate: 10,
-                cost: function(owned) {
-                    return Math.floor(2000* Math.pow(1.07,owned))
-                }  
-            },
-            "giveaway": {
+                rate: 20,
+                baseCost: 1000, //2000,
+                increase: 1.17
+            }),
+            "giveaway": new Upgrade({
                 name: "Giveaway",
                 description: "Share for a chance to be #influenced",
-                rate: 40,
-                cost: function(owned){
-                    return Math.floor(12000* Math.pow(1.11,owned))
-                }
-                
-            },
-            "youtube": {
+                rate: 60,
+                baseCost: 6000, //12,000
+                increase: 1.11
+            }),
+            "youtube": new Upgrade({
                 name: "YouTube Stunt",
                 description: "It's only a terrible idea if no one's watching",
-                rate: 100,
-                cost: function(owned) {
-                    return Math.floor(43434* Math.pow(1.09,owned))
-                }
-            },
-            "apology": {
+                rate: 300,
+                baseCost: 12345, //43434
+                increase: 1.09
+            }),
+            "apology": new Upgrade({
                 name: "Apology Video",
                 description: "ok maybe it WAS a terrible idea",
-                rate: 400,
-                cost: function(owned) {
-                    return Math.floor(200000* Math.pow(1.07,owned))
-                }
-               
-            },
-           
-            "interns": {
+                rate: 1200,
+                baseCost: 25000,//200,000
+                increase: 1.07
+            }),
+            "interns": new Upgrade({
                 name: "Unpaid Interns",
                 description: "Posting for you is valuable experience",
-                rate: 5000,
-                cost: function(owned) {
-                    return Math.floor(1675000* Math.pow(1.13,owned))
-                }
-            },
-            
-            "tv": {
+                rate: 5000, //5000
+                baseCost: 35000, //1675000
+                increase: 1.13
+            }),
+            "tv": new Upgrade({
                 name: "Reality TV Show",
                 description: "Deep down, we all knew it would come to this",
-                rate: 66666,
-                cost: function(owned){
-                    return Math.floor(100000000* Math.pow(1.15,owned))
-                }
-            },
+                rate: 16666, //66 666
+                baseCost: 50000,
+                increase: 1.15
+            })
         }
         this.registry.set("upgrades", upgrades);
     }
@@ -617,28 +524,96 @@ class MainScene extends Phaser.Scene {
     
 }
 
+class Upgrade {
+    
+    constructor({baseCost, increase, name, description, rate, icon}) {
+        this.baseCost = baseCost;
+        this.increase = increase;
+        this.name = name;
+        this.description = description;
+        this.rate = rate;
+        this.icon = icon;
+    }
+    
+    cost (owned) {
+        return Math.floor(this.baseCost * Math.pow(this.increase, owned))
+    }
+}
 
 
 class Title extends Phaser.Scene {
     constructor() {
-        super("Title")
+        super("Title");
+        this.t = 0;
+        this.numThings = -0;
+        this.maxThings = 100;
+        
+        this.things = ["tag", "hearto", "heartb", "reposto", "repostb", "nodeo", "nodeb", "shareo", "shareb", "planeo", "planeb", "alert"];
     }
 
     preload() {
         this.load.image("title", "assets/title.png");
         this.load.bitmapFont('type-y', 'assets/font/typewriter-yellow.png', 'assets/font/typewriter-yellow.fnt');
+        this.load.bitmapFont('type-b', 'assets/font/typewriter-blue.png', 'assets/font/typewriter-blue.fnt');
+        this.load.bitmapFont('type-o', 'assets/font/typewriter-orange.png', 'assets/font/typewriter-orange.fnt');
+        this.load.text("tagList", "assets/names.txt");
+        this.load.image('hearto', 'assets/heart-orange.png');
+        this.load.image('heartb', 'assets/heart-blue.png');
+        this.load.image('reposto', 'assets/sharicle-orange.png');
+        this.load.image('repostb', 'assets/sharicle-blue.png');
+        this.load.image('nodeo', 'assets/node-orange.png');
+        this.load.image('nodeb', 'assets/node-blue.png');
+        this.load.image('shareo', 'assets/share-arrow-orange.png');
+        this.load.image('shareb', 'assets/share-arrow-blue.png');
+        this.load.image('planeo', 'assets/plane-orange.png');
+        this.load.image('planeb', 'assets/plane-blue.png');
+        this.load.image("alert", "assets/alert.png");
     }
+    
+    makeBouncy(thing) {
+        let scene = this;
+        
+        scene.physics.add.existing(thing, false);      
+        
+        thing.body.setVelocity(Phaser.Math.Between(-300, 300), Phaser.Math.Between(-300, 300));
+        thing.body.setBounce(1, 1);
+        thing.body.setCollideWorldBounds(true);
+    }
+    
 
     create() {
         let scene = this;
-        this.add.image(CENTER_X,CENTER_Y,"title");
-        this.add.bitmapText(CENTER_X - 135,CENTER_Y,"type-y", "(press any key)", 32);
-        this.add.bitmapText(CENTER_X - 195,CENTER_Y*2 - 50,"type-y", "Next Level Banana Games", 32)
+        this.add.image(CENTER_X,CENTER_Y-100,"title");
+        this.add.bitmapText(CENTER_X - 170,CENTER_Y*2 - 200,"type-o", "(press any key)", BIGFONTSIZE);
+        this.add.bitmapText(CENTER_X - 300,CENTER_Y*2 - 250,"type-y", "Next Level Banana Games", BIGFONTSIZE);
+        
+        const compet = this.add.bitmapText(CENTER_X + 200, 300, "type-y", "a competitive clicker!", BIGFONTSIZE);
+        const twop = this.add.bitmapText(CENTER_X + 200, 300, "type-y", "#twoplayer", BIGFONTSIZE);
+                
+        this.makeBouncy(compet);
+        this.makeBouncy(twop);
 
         this.input.keyboard.on("keyup", function(){
             scene.scene.stop();
             scene.scene.start("Instructions");
         });
+    }
+    
+    update () {
+        let scene = this;
+        scene.t += 1;
+        
+        if (scene.t % 2000 == 0 && scene.numThings < scene.maxThings) {
+            scene.numThings++;
+            const idx = Phaser.Math.Between(0,scene.things.length);
+            if (scene.things[idx] == "tag") {
+                const newText = scene.add.bitmapText(Phaser.Math.Between(0,WIDTH), Phaser.Math.Between(0, HEIGHT), "type-b", Name.getHashtag(), SMALLFONTSIZE);
+                this.makeBouncy(newText);
+            } else {
+                const newShare = scene.add.image(Phaser.Math.Between(0,WIDTH), Phaser.Math.Between(0, HEIGHT), scene.things[idx]);
+                this.makeBouncy(newShare);
+            }
+        }
     }
 }
 
@@ -649,12 +624,15 @@ class Instructions extends Phaser.Scene {
 
     preload() {
         this.load.image("tut", "assets/tut.png");
+        this.load.bitmapFont('type-y', 'assets/font/typewriter-yellow.png', 'assets/font/typewriter-yellow.fnt');
     }
 
     create() {
         let scene = this;
-        this.add.image(CENTER_X,CENTER_Y,"tut");
-
+        const tut = this.add.image(CENTER_X,CENTER_Y,"tut");
+        tut.setScale(1.3)
+        
+        scene.add.bitmapText(CENTER_X - 400, 100, "type-y", "First to 100k followers wins!", BIGFONTSIZE)
         this.input.keyboard.on("keyup", function(){
             scene.scene.stop();
             scene.scene.start("Main");
@@ -678,6 +656,5 @@ let config = {
 
 let game = new Phaser.Game(config);
 game.scene.add("Main", MainScene, false);
-//game.scene.add("Title", Title, false);
 game.scene.add("Instructions", Instructions, false);
 game.scene.start("Title");
